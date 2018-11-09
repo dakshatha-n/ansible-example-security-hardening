@@ -1,0 +1,8 @@
+---
+- src: https://github.com/MindPointGroup/RHEL7-STIG.git
+  name: rhel7-stig
+  version: 0.1.7
+
+- src: https://github.com/MindPointGroup/RHEL7-CIS.git
+  name: rhel7-cis
+  version: 0.1.4
