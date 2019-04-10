@@ -5,6 +5,12 @@
       - scap-security-guide
     state: latest
 
+- set_fact:
+    oscap_policy: "{{ oscap_policy_profile_tuple[0] }}"
+    oscap_profile: "{{ oscap_policy_profile_tuple[1] }}"
+  vars:
+    oscap_policy_profile_tuple: "{{ oscap_policy_profile_csv.split(',') }}"
+
 - block:
     - name: run openscap
       command: >

@@ -1,7 +1,4 @@
 ---
-oscap_profile: xccdf_org.ssgproject.content_profile_pci-dss
-oscap_policy: ssg-rhel-dss
-
 oscap_report_name: oscap-report-{{ ansible_hostname }}.html
 oscap_report_path: /tmp/{{ oscap_report_name }}
 oscap_results_arf_path: /tmp/oscap-arf.xml
