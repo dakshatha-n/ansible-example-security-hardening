@@ -1,43 +1,89 @@
-- name: install openscap scanner
-  yum:
-    name:
-      - openscap-scanner
-      - scap-security-guide
-    state: latest
-
-- set_fact:
-    oscap_profile: "{{ oscap_profile_lookup[oscap_profile_name] }}"
-  when:
-    - oscap_profile_name is defined
-    - oscap_profile is not defined
+---
+- stat:
+    path: /etc/yum.repos.d/redhat-rhui.repo
+  register: rhui_repo
 
 - block:
-    - name: run openscap
-      command: >
-        oscap xccdf eval
-        --profile {{ oscap_profile }}
-        --results-arf {{ oscap_results_arf_path }}
-        --report {{ oscap_report_path }}
-        --fetch-remote-resources
-        /usr/share/xml/scap/ssg/content/{{ oscap_policy }}.xml
-  always:
-    - name: download report
-      fetch:
-        src: "{{ oscap_report_path }}"
-        dest: "{{ oscap_report_name }}"
-        flat: yes
-    
-    - name: copy report to AWS S3
-      aws_s3:
-        region: us-east-1
-        bucket: oscap-reporting
-        object: "{{ oscap_report_name }}"
-        mode: put
-        permission: public-read
-        src: "{{ oscap_report_name }}"
-        validate_certs: no
-      register: report_upload
+  - name: Install Open SCAP scanner
+    yum:
+      name: openscap-scanner
+      state: present
+      disablerepo: '*'
+      enablerepo: rhel-{{ ansible_distribution_major_version }}-server-rpms
 
-    - name: output URL of report
-      set_fact:
-        oscap_report_url: "{{ report_upload.url }}"
+  - name: Install Open SCAP Security Guide
+    yum:
+      name: scap-security-guide
+      state: present
+      disablerepo: '*'
+      enablerepo: rhel-{{ ansible_distribution_major_version }}-server-rpms
+  when: rhui_repo.stat.isreg is undefined or rhui_repo.stat.isreg == False
+
+- block:
+  - name: Install Open SCAP scanner
+    yum:
+      name: openscap-scanner
+      state: present
+      disablerepo: '*'
+      enablerepo: rhui-REGION-rhel-server-releases
+
+  - name: Install Open SCAP Security Guide
+    yum:
+      name: scap-security-guide
+      state: present
+      disablerepo: '*'
+      enablerepo: rhui-REGION-rhel-server-releases
+  when: rhui_repo.stat.isreg is defined and rhui_repo.stat.isreg == True
+
+- name: Ensure the Reports Directory Exists
+  file:
+    path: /tmp/scap_reports
+    state: directory
+    mode: 0700
+    owner: root
+    group: root
+
+- name: Reload auditd for good measure
+  shell: /sbin/augenrules --load
+
+- set_fact:
+    oscap_profile: "{{ (oscap_profile | default([])) + [oscap_profile_lookup[item]] }}"
+  loop: "{{ oscap_profile_names | default([]) }}"
+
+- name: Run an SCAP scan and Generate Report EL 7
+  command: >
+    /usr/bin/oscap xccdf eval
+    --profile "{{ item }}"
+    --results /tmp/scap_reports/scan-xccdf-results-{{ ansible_hostname }}-{{ ansible_date_time.iso8601  }}-{{ item }}.xml
+    --report /tmp/scap_reports/scan-xccdf-report-{{ ansible_hostname }}-{{ ansible_date_time.iso8601  }}-{{ item }}.html
+    /usr/share/xml/scap/ssg/content/ssg-rhel7-xccdf.xml
+  failed_when: result | failed and result.rc == 1
+  register: result
+  loop: "{{ oscap_profile }}"
+
+- name: Determine Most Recent Report
+  shell: ls -t /tmp/scap_reports/*.html | head -n 1
+  args:
+    executable: /bin/bash
+  register: scap_html_report
+
+- name: Fetch the SCAP Report
+  fetch:
+    src: "{{ scap_html_report.stdout }}"
+    dest: "{{ scap_html_report.stdout }}"
+    flat: yes
+    
+- name: copy report to AWS S3
+  aws_s3:
+    region: us-east-1
+    bucket: oscap-reporting
+    object: "{{ scap_html_report.stdout }}"
+    mode: put
+    permission: public-read
+    src: "{{ scap_html_report.stdout }}"
+    validate_certs: no
+  register: report_upload
+
+- name: output URL of report
+  set_fact:
+    oscap_report_url: "{{ report_upload.url }}"
