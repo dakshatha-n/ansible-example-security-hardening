@@ -79,6 +79,7 @@
     validate_certs: no
   register: report_upload
   loop: "{{ oscap_profiles }}"
+  delegate_to: localhost
 
 - name: output URL of report
   set_fact:
