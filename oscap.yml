@@ -1,0 +1,6 @@
+---
+- name: Run OpenSCAP and upload resulting report to an S3 bucket
+  hosts: all
+  become: yes
+  roles:
+    - oscap

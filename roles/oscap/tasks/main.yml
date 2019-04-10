@@ -1,0 +1,40 @@
+- name: install openscap scanner
+  yum:
+    name:
+      - openscap-scanner
+      - scap-security-guide
+    state: latest
+
+- block:
+    - name: run openscap
+      command: >
+        oscap xccdf eval
+        --profile {{ oscap_profile }}
+        --results-arf {{ oscap_results_arf_path }}
+        --report {{ oscap_report_path }}
+        --fetch-remote-resources
+        /usr/share/xml/scap/ssg/content/{{ oscap_policy }}.xml
+
+  always:
+    - name: download report
+      fetch:
+        src: "{{ oscap_report_path }}"
+        dest: "{{ oscap_report_name }}"
+        flat: yes
+    
+    - name: copy report to AWS S3
+      aws_s3:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: us-east-1
+        bucket: oscap-reporting
+        object: "{{ oscap_report_name }}"
+        mode: put
+        permission: public-read
+        src: "{{ oscap_report_name }}"
+        validate_certs: no
+      register: report_upload
+
+    - name: output URL of report
+      set_fact:
+        oscap_report_url: "{{ report_upload.url }}"
