@@ -47,42 +47,38 @@
   shell: /sbin/augenrules --load
 
 - set_fact:
-    oscap_profile: "{{ (oscap_profile | default([])) + [oscap_profile_lookup[item]] }}"
+    oscap_profiles: "{{ (oscap_profiles | default([])) + [oscap_profile_lookup[item]] }}"
   loop: "{{ oscap_profile_names | default([]) }}"
 
 - name: Run an SCAP scan and Generate Report EL 7
   command: >
     /usr/bin/oscap xccdf eval
     --profile "{{ item }}"
-    --results /tmp/scap_reports/scan-xccdf-results-{{ ansible_hostname }}-{{ ansible_date_time.iso8601  }}-{{ item }}.xml
-    --report /tmp/scap_reports/scan-xccdf-report-{{ ansible_hostname }}-{{ ansible_date_time.iso8601  }}-{{ item }}.html
+    --results /tmp/scap_reports/{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml
+    --report /tmp/scap_reports/{{ ansible_hostname }}-scan-xccdf-report-{{ item }}.html
     /usr/share/xml/scap/ssg/content/ssg-rhel7-xccdf.xml
   failed_when: result | failed and result.rc == 1
   register: result
-  loop: "{{ oscap_profile }}"
-
-- name: Determine Most Recent Report
-  shell: ls -t /tmp/scap_reports/*.html | head -n 1
-  args:
-    executable: /bin/bash
-  register: scap_html_report
+  loop: "{{ oscap_profiles }}"
 
 - name: Fetch the SCAP Report
   fetch:
-    src: "{{ scap_html_report.stdout }}"
-    dest: "{{ scap_html_report.stdout }}"
+    src: /tmp/scap_reports/{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml
+    dest: "{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml"
     flat: yes
+  loop: "{{ oscap_profiles }}"
     
-- name: copy report to AWS S3
+- name: Copy reports to AWS S3
   aws_s3:
     region: us-east-1
     bucket: oscap-reporting
-    object: "{{ scap_html_report.stdout }}"
+    object: "{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml"
     mode: put
     permission: public-read
-    src: "{{ scap_html_report.stdout }}"
+    src: "{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml"
     validate_certs: no
   register: report_upload
+  loop: "{{ oscap_profiles }}"
 
 - name: output URL of report
   set_fact:
