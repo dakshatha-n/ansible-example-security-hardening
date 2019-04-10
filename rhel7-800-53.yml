@@ -1,0 +1,9 @@
+---
+- name: Ensure all NIST 800-53 security controls are applied
+  hosts: all
+  become: yes
+  roles:
+    - role: rhel7-800-53
+      when:
+        - ansible_os_family == 'RedHat'
+        - ansible_distribution_major_version == '7'

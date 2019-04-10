@@ -6,3 +6,7 @@
 - src: https://github.com/MindPointGroup/RHEL7-CIS.git
   name: rhel7-cis
   version: 0.1.4
+
+- src: https://github.com/rhtps/ansible-role-800-53.git
+  name: 800-53
+  version: v1.1.2
