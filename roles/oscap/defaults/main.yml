@@ -1,4 +1,17 @@
 ---
+oscap_policy: ssg-rhel7-ds
 oscap_report_name: oscap-report-{{ ansible_hostname }}.html
 oscap_report_path: /tmp/{{ oscap_report_name }}
 oscap_results_arf_path: /tmp/oscap-arf.xml
+
+oscap_profile_lookup:
+  United States Government Configuration Baseline: xccdf_org.ssgproject.content_profile_ospp
+  Standard System Security Profile for Red Hat Enterprise Linux 7: xccdf_org.ssgproject.content_profile_standard
+  Criminal Justice Information Services (CJIS) Security Policy: xccdf_org.ssgproject.content_profile_cjis
+  C2S for Red Hat Enterprise Linux 7: xccdf_org.ssgproject.content_profile_C2S
+  Health Insurance Portability and Accountability Act (HIPAA): xccdf_org.ssgproject.content_profile_hipaa
+  Unclassified Information in Non-federal Information Systems and Organizations (NIST 800-171): xccdf_org.ssgproject.content_profile_nist-800-171-cui
+  DISA STIG for Red Hat Enterprise Linux 7: xccdf_org.ssgproject.content_profile_stig-rhel7-disa
+  OSPP - Protection Profile for General Purpose Operating Systems v. 4.2: xccdf_org.ssgproject.content_profile_ospp42
+  PCI-DSS v3 Control Baseline for Red Hat Enterprise Linux 7: xccdf_org.ssgproject.content_profile_pci-dss
+  Red Hat Corporate Profile for Certified Cloud Providers (RH CCP): xccdf_org.ssgproject.content_profile_rht-ccp

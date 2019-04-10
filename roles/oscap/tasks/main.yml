@@ -6,10 +6,10 @@
     state: latest
 
 - set_fact:
-    oscap_policy: "{{ oscap_policy_profile_tuple[0] }}"
-    oscap_profile: "{{ oscap_policy_profile_tuple[1] }}"
-  vars:
-    oscap_policy_profile_tuple: "{{ oscap_policy_profile_csv.split(',') }}"
+    oscap_profile: "{{ oscap_profile_lookup[oscap_profile_name] }}"
+  when:
+    - oscap_profile_name is defined
+    - oscap_profile is not defined
 
 - block:
     - name: run openscap
