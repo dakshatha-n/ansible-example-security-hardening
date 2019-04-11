@@ -4,4 +4,4 @@
   connection: winrm
   become: yes
   roles:
-    - windows-2012-stig
+    - windows-2012-harden
