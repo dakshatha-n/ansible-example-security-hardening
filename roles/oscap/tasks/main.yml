@@ -72,10 +72,10 @@
   aws_s3:
     region: us-east-1
     bucket: oscap-reporting
-    object: "{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml"
+    object: "{{ ansible_hostname }}-scan-xccdf-report-{{ item }}.html"
     mode: put
     permission: public-read
-    src: "{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml"
+    src: "{{ ansible_hostname }}-scan-xccdf-report-{{ item }}.html"
     validate_certs: no
   register: report_upload
   loop: "{{ oscap_profiles }}"
@@ -84,4 +84,5 @@
 
 - name: output URL of report
   set_fact:
-    oscap_report_url: "{{ report_upload.url }}"
+    oscap_report_urls:  (oscap_report_urls | default([])) + ['https://s3.amazonaws.com/oscap-reporting/{{ ansible_hostname }}-scan-xccdf-report-{{ item }}.html']
+  loop: "{{ oscap_profiles }}"
