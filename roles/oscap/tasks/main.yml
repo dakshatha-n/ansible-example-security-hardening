@@ -80,6 +80,7 @@
   register: report_upload
   loop: "{{ oscap_profiles }}"
   delegate_to: localhost
+  become: no
 
 - name: output URL of report
   set_fact:
