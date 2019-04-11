@@ -10,7 +10,3 @@
 - src: https://github.com/rhtps/ansible-role-800-53.git
   name: 800-53
   version: v1.1.2
-
-- src: https://github.com/MindPointGroup/Windows-2012-Member-Server-STIG.git
-  name: windows-2012-stig
-  version: master
