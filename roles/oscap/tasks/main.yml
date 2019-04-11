@@ -63,8 +63,8 @@
 
 - name: Fetch the SCAP Report
   fetch:
-    src: /tmp/scap_reports/{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml
-    dest: "{{ ansible_hostname }}-scan-xccdf-results-{{ item }}.xml"
+    src: /tmp/scap_reports/{{ ansible_hostname }}-scan-xccdf-report-{{ item }}.html
+    dest: "{{ ansible_hostname }}-scan-xccdf-report-{{ item }}.html"
     flat: yes
   loop: "{{ oscap_profiles }}"
     
